@@ -1,0 +1,52 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+    padding: 20px;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* D3 Chart Specific Styles */
+#pit-stop-chart {
+    width: 100%;
+    height: 500px;
+    margin-top: 20px;
+}
+
+
+.bar:hover {
+    fill: #a30400; /* Darker red on hover */
+}
+
+.axis-label {
+    font-size: 14px;
+    font-weight: bold;
+}
+/* Navigation Bar Styles */
+.main-nav {
+    background-color: #15151e; /* F1 dark theme color */
+    padding: 15px 20px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.main-nav a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 0 15px;
+    font-size: 16px;
+    transition: color 0.3s ease;
+}
+
+.main-nav a:hover {
+    color: #e10600; /* F1 Red */
+}
