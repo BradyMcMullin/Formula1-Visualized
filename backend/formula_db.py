@@ -35,3 +35,26 @@ def avg_position_per_pit_stop_count():
     results = [dict(row) for row in rows]
     conn.close()
     return results
+
+def total_retirements_by_circuit():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+                    SELECT
+                        COUNT(c.circuitId) AS total_retirements,
+                        c.circuitRef AS circuit_came
+                    FROM results AS r
+                    JOIN races AS rs ON rs.raceId = r.raceId
+                    JOIN circuits AS c ON rs.circuitId = c.circuitId
+                    WHERE r.positionText = "R"
+                    GROUP BY c.circuitId
+                    ORDER BY Total_Retirements DESC;
+
+                    SELECT
+                        c.circuitRef
+                    FROM circuits AS c;
+                   """)
+    rows = cursor.fetchall()
+    results = [dict(row) for row in rows]
+    conn.close()
+    return results
