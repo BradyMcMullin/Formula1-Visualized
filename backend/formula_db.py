@@ -6,6 +6,14 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row 
     return conn
 
+def get_query(query):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    results = [dict(row) for row in rows]
+    conn.close()
+    return results
 
 """
 -----------------
@@ -310,13 +318,13 @@ def highest_average_finishing_position_by_circuit():
             c.name AS circuit,
             COUNT(*) AS starts,
             ROUND(AVG(r.positionOrder), 2) AS avg_finish
-        FROM results r
-        JOIN races ra ON r.raceId = ra.raceId
-        JOIN circuits c ON ra.circuitId = c.circuitId
-        JOIN drivers d ON r.driverId = d.driverId
+        FROM results AS r
+        JOIN races AS ra ON r.raceId = ra.raceId
+        JOIN circuits AS c ON ra.circuitId = c.circuitId
+        JOIN drivers AS d ON r.driverId = d.driverId
         WHERE r.positionOrder IS NOT NULL
         GROUP BY r.driverId, c.circuitId
-        HAVING starts >= 3
+        HAVING starts >= 10
         ORDER BY avg_finish ASC
         LIMIT 150;
                    """)
@@ -342,3 +350,46 @@ def countries_by_circuits_hosted():
     results = [dict(row) for row in rows]
     conn.close()
     return results
+
+def drivers_by_career_length():
+    query = """
+            SELECT
+                d.forename || ' ' || d.surname AS driver_name,
+                MIN(ra.year) AS first_year,
+                MAX(ra.year) AS last_year,
+                (MAX(ra.year) - MIN(ra.year)) AS career_length_years,
+                COUNT(r.raceId) AS total_races
+            FROM drivers d
+            JOIN results r ON d.driverId = r.driverId
+            JOIN races ra ON r.raceId = ra.raceId
+            GROUP BY d.driverId
+            ORDER BY career_length_years DESC
+            """
+    return get_query(query)
+
+def competitiveness_over_time():
+    query = """
+                WITH decade_circuit AS (
+                SELECT
+                    ra.circuitId,
+                    (ra.year / 10) * 10 AS decade,
+                    COUNT(DISTINCT CASE WHEN r.position = 1 THEN r.driverId END) AS unique_winners,
+                    COUNT(DISTINCT ra.raceId) AS races_held,
+                    ROUND(AVG(r.grid - r.positionOrder), 2) AS avg_positions_gained
+                FROM results r
+                JOIN races ra ON r.raceId = ra.raceId
+                WHERE r.grid > 0 AND r.positionOrder > 0
+                GROUP BY ra.circuitId, decade
+                HAVING races_held >= 2
+            )
+            SELECT
+                circuitId,
+                decade,
+                unique_winners,
+                races_held,
+                avg_positions_gained,
+                ROUND(CAST(unique_winners AS FLOAT) / races_held, 2) AS winner_diversity_ratio
+            FROM decade_circuit
+            ORDER BY circuitId, decade;
+            """
+    return get_query(query)
