@@ -42,7 +42,7 @@ def total_retirements_by_circuit():
     cursor.execute("""
                     SELECT
                         COUNT(c.circuitId) AS total_retirements,
-                        c.circuitRef AS circuit_came
+                        c.circuitRef AS circuit_name
                     FROM results AS r
                     JOIN races AS rs ON rs.raceId = r.raceId
                     JOIN circuits AS c ON rs.circuitId = c.circuitId
@@ -53,6 +53,23 @@ def total_retirements_by_circuit():
                     SELECT
                         c.circuitRef
                     FROM circuits AS c;
+                   """)
+    rows = cursor.fetchall()
+    results = [dict(row) for row in rows]
+    conn.close()
+    return results
+
+def number_of_races_by_circuit():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+                   SELECT
+                        COUNT(c.circuitId) AS total_races,
+                        c.circuitRef AS circuit_name
+                    FROM races AS rs
+                    JOIN circuits AS c ON rs.circuitId = c.circuitId
+                    GROUP BY c.circuitId
+                    ORDER BY total_races DESC;
                    """)
     rows = cursor.fetchall()
     results = [dict(row) for row in rows]
