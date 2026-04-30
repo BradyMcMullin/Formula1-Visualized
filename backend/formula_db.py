@@ -75,3 +75,16 @@ def number_of_races_by_circuit():
     results = [dict(row) for row in rows]
     conn.close()
     return results
+
+def year_with_most_winners():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+                    SELECT
+                        COUNT(r.driverId)
+                    FROM results AS r
+                   """)
+    rows = cursor.fetchall()
+    results = [dict(row) for row in rows]
+    conn.close()
+    return results
