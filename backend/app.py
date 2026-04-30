@@ -33,5 +33,32 @@ def get_pit_stop_correlation():
         print(f"Error fetching pit stop correlation data: {e}")
         return jsonify({"error": "Failed to fetch data"}), 500
 
+app.route('/api/pit-stops-per-year')
+def get_pit_stops_per_year():
+    try:
+        data = formula_db.pit_stop_count_per_year()
+        return jsonify(data)
+    except Exception as e:
+        print(f"Error fetching pit stops per year data: {e}")
+        return jsonify({"error": "Failed to fetch data"}), 500
+
+@app.route('/api/avg-pit-stop-duration')
+def get_avg_pit_stop_duration():
+    try:
+        data = formula_db.avg_pit_stop_duration_per_year()
+        return jsonify(data)
+    except Exception as e:
+        print(f"Error fetching avg pit stop duration data: {e}")
+        return jsonify({"error": "Failed to fetch data"}), 500
+
+@app.route('/api/fastest-pit-crews')
+def get_fastest_pit_crews():
+    try:
+        data = formula_db.fastest_pit_crews_by_constructor()
+        return jsonify(data)
+    except Exception as e:
+        print(f"Error fetching fastest pit crews data: {e}")
+        return jsonify({"error": "Failed to fetch data"}), 500
+
 if __name__ == '__main__':
     app.run(debug=True, port = 5000)
