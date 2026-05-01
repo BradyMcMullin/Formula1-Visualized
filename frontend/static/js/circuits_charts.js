@@ -162,7 +162,6 @@ export function createPaginatedChart(config) {
 }
 
 // Custom Bubble Chart for Competitiveness Over Time
-// Custom Bubble Chart for Competitiveness Over Time
 export function createBubbleChart(config) {
     const { containerSelector, data, title, subtitle } = config;
 
@@ -238,7 +237,7 @@ export function createBubbleChart(config) {
       .on("mouseover", function(event, d) {
           d3.select(this).style("stroke", "black").style("opacity", "1");
           tooltip.style("opacity", 1)
-                 .html(`Circuit ID: ${d.circuitId}<br>Decade: ${d.decade}s<br>Pos Gained: ${d.avg_positions_gained}<br>Diversity Ratio: ${d.winner_diversity_ratio.toFixed(2)}`)
+                 .html(`Circuit ID: $ Circuit Name: ${d.circuitRef}<br>Decade: ${d.decade}s<br>Pos Gained: ${d.avg_positions_gained}<br>Diversity Ratio: ${d.winner_diversity_ratio.toFixed(2)}`)
                  .style("left", (event.pageX + 10) + "px")
                  .style("top", (event.pageY - 28) + "px");
       })
