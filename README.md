@@ -1,6 +1,6 @@
-# Formula 1 Data Explorer 🏎️📊
+# Formula 1 Visualized 🏎️📊
 
-Welcome to the **Formula 1 Data Explorer**, a comprehensive web application built to analyze and visualize historical F1 data. Created as a Database Systems final project, this platform leverages a robust SQLite backend, a Python/Flask API, and dynamic D3.js data visualizations to uncover deep insights into race strategies, driver performance, and team dominance.
+Welcome to the **Formula 1 Visualized**, a comprehensive web application built to analyze and visualize historical F1 data. Created as a Database Systems final project, this platform leverages a robust SQLite backend, a Python/Flask API, and dynamic D3.js data visualizations to uncover deep insights into race strategies, driver performance, and team dominance.
 
 ## 🌟 Features & Analyses
 
