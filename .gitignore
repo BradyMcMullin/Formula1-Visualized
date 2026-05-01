@@ -1,3 +1,4 @@
 *Zone.Identifier
 .venv/
-./backend/_pycache_/
+./backend/_pycache_
+./backend/_pycache_/*

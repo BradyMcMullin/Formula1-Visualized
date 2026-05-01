@@ -215,6 +215,7 @@ def competitiveness_over_time():
             )
             SELECT
                 circuitId,
+                circuitRef,
                 decade,
                 unique_winners,
                 races_held,
