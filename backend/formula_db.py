@@ -201,18 +201,21 @@ def competitiveness_over_time():
                 WITH decade_circuit AS (
                 SELECT
                     ra.circuitId,
+                    c.circuitRef AS circuitRef,
                     (ra.year / 10) * 10 AS decade,
                     COUNT(DISTINCT CASE WHEN r.position = 1 THEN r.driverId END) AS unique_winners,
                     COUNT(DISTINCT ra.raceId) AS races_held,
                     ROUND(AVG(r.grid - r.positionOrder), 2) AS avg_positions_gained
                 FROM results r
                 JOIN races ra ON r.raceId = ra.raceId
+                JOIN circuits c ON ra.circuitId = c.circuitId
                 WHERE r.grid > 0 AND r.positionOrder > 0
                 GROUP BY ra.circuitId, decade
                 HAVING races_held >= 2
             )
             SELECT
                 circuitId,
+                circuitRef,
                 decade,
                 unique_winners,
                 races_held,
