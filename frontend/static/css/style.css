@@ -50,3 +50,37 @@ body {
 .main-nav a:hover {
     color: #e10600; /* F1 Red */
 }
+
+/* F1 Themed Navigation Bar */
+nav {
+    background-color: #15151e; /* F1 Dark Theme */
+    display: flex;
+    justify-content: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    margin-bottom: 30px;
+}
+
+nav a {
+    color: #ffffff;
+    text-decoration: none;
+    padding: 15px 25px;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 14px;
+    transition: background-color 0.3s, color 0.3s;
+    border-bottom: 3px solid transparent;
+}
+
+nav a:hover {
+    background-color: #333333;
+    color: #e10600; /* F1 Red */
+    border-bottom: 3px solid #e10600;
+}
+
+/* We will apply this class to the current page's link */
+nav a.active {
+    color: #e10600;
+    border-bottom: 3px solid #e10600;
+}

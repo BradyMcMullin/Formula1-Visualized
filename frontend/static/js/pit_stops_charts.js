@@ -135,3 +135,243 @@ export function drawPitStopCorrelation(data, containerId) {
         .style("font-weight", "bold")
         .text("Occurrences");
 }
+
+// 1. Pit Stops Per Year Chart (D3.js) - Updated with labels
+export function createPitStopsPerYearChart(containerSelector, data) {
+    const margin = {top: 60, right: 30, bottom: 60, left: 70};
+    const width = 800 - margin.left - margin.right;
+    const height = 400 - margin.top - margin.bottom;
+
+    const svg = d3.select(containerSelector)
+      .append("svg")
+        .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+      .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Title & Subtitle
+    svg.append("text").attr("x", width / 2).attr("y", -30).attr("text-anchor", "middle").style("font-size", "18px").text("Total Pit Stops Per Racing Season");
+    svg.append("text").attr("x", width / 2).attr("y", -10).attr("text-anchor", "middle").style("font-size", "12px").style("fill", "#666").text("Shows the evolution of race strategy over time");
+
+    // X Axis
+    const x = d3.scaleBand()
+      .range([0, width])
+      .domain(data.map(d => d.year))
+      .padding(0.2);
+    
+    svg.append("g")
+      .attr("transform", `translate(0,${height})`)
+      .call(d3.axisBottom(x))
+      .selectAll("text")
+        .attr("transform", "translate(-10,0)rotate(-45)")
+        .style("text-anchor", "end");
+        
+    svg.append("text").attr("x", width / 2).attr("y", height + 50).attr("text-anchor", "middle").text("Season (Year)");
+
+    // Y Axis
+    const y = d3.scaleLinear()
+      .domain([0, d3.max(data, d => d.PitStopCount)])
+      .range([height, 0]);
+      
+    svg.append("g").call(d3.axisLeft(y));
+    svg.append("text").attr("transform", "rotate(-90)").attr("y", -50).attr("x", -height / 2).attr("text-anchor", "middle").text("Number of Pit Stops");
+
+    // Bars
+    svg.selectAll("rect")
+      .data(data)
+      .join("rect")
+        .attr("x", d => x(d.year))
+        .attr("y", d => y(d.PitStopCount))
+        .attr("width", x.bandwidth())
+        .attr("height", d => height - y(d.PitStopCount))
+        .attr("fill", "steelblue");
+
+    // Data Labels (Numbers on top of bars)
+    svg.selectAll(".bar-label")
+      .data(data)
+      .join("text")
+        .attr("class", "bar-label")
+        .attr("x", d => x(d.year) + x.bandwidth() / 2)
+        .attr("y", d => y(d.PitStopCount) - 5) // 5 pixels above the bar
+        .attr("text-anchor", "middle")
+        .style("font-size", "10px")
+        .style("fill", "#333")
+        .text(d => d.PitStopCount);
+}
+
+// 2. Average Pit Stop Duration Per Year Chart (D3.js) - Updated with labels
+export function createAvgPitStopDurationChart(containerSelector, data) {
+    const margin = {top: 60, right: 30, bottom: 60, left: 70};
+    const width = 800 - margin.left - margin.right;
+    const height = 400 - margin.top - margin.bottom;
+
+    const svg = d3.select(containerSelector)
+      .append("svg")
+        .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+      .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Title & Subtitle
+    svg.append("text").attr("x", width / 2).attr("y", -30).attr("text-anchor", "middle").style("font-size", "18px").text("Average Pit Stop Duration Per Season");
+    svg.append("text").attr("x", width / 2).attr("y", -10).attr("text-anchor", "middle").style("font-size", "12px").style("fill", "#666").text("Excludes severe outliers (stops longer than 180s)");
+
+    // X Axis
+    const x = d3.scaleBand()
+      .range([0, width])
+      .domain(data.map(d => d.year))
+      .padding(0.2);
+      
+    svg.append("g")
+      .attr("transform", `translate(0,${height})`)
+      .call(d3.axisBottom(x))
+      .selectAll("text")
+        .attr("transform", "translate(-10,0)rotate(-45)")
+        .style("text-anchor", "end");
+        
+    svg.append("text").attr("x", width / 2).attr("y", height + 50).attr("text-anchor", "middle").text("Season (Year)");
+
+    // Y Axis
+    const y = d3.scaleLinear()
+      .domain([0, d3.max(data, d => d.AvgPitStopDuration) * 1.05]) // Added 5% padding so highest label isn't cut off
+      .range([height, 0]);
+      
+    svg.append("g").call(d3.axisLeft(y));
+    svg.append("text").attr("transform", "rotate(-90)").attr("y", -50).attr("x", -height / 2).attr("text-anchor", "middle").text("Average Time (Seconds)");
+
+    // Bars
+    svg.selectAll("rect")
+      .data(data)
+      .join("rect")
+        .attr("x", d => x(d.year))
+        .attr("y", d => y(d.AvgPitStopDuration))
+        .attr("width", x.bandwidth())
+        .attr("height", d => height - y(d.AvgPitStopDuration))
+        .attr("fill", "crimson");
+
+    // Data Labels (Numbers on top of bars)
+    svg.selectAll(".bar-label")
+      .data(data)
+      .join("text")
+        .attr("class", "bar-label")
+        .attr("x", d => x(d.year) + x.bandwidth() / 2)
+        .attr("y", d => y(d.AvgPitStopDuration) - 5) // 5 pixels above the bar
+        .attr("text-anchor", "middle")
+        .style("font-size", "10px")
+        .style("fill", "#333")
+        .text(d => d.AvgPitStopDuration.toFixed(2) + "s"); // Rounded to 2 decimals with 's' suffix
+}
+
+// 3. Fastest Pit Crews Horizontal Bar Chart with Pagination (D3.js)
+export function createFastestPitCrewsChart(containerSelector, data, prevBtnId, nextBtnId, pageInfoId) {
+    const margin = {top: 60, right: 60, bottom: 60, left: 160}; // Increased left margin for constructor names
+    const width = 800 - margin.left - margin.right;
+    const height = 450 - margin.top - margin.bottom;
+
+    const svg = d3.select(containerSelector)
+      .append("svg")
+        .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+      .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Title & Subtitle
+    svg.append("text").attr("x", width / 2).attr("y", -30).attr("text-anchor", "middle").style("font-size", "18px").text("Fastest Pit Crews by Constructor");
+    svg.append("text").attr("x", width / 2).attr("y", -10).attr("text-anchor", "middle").style("font-size", "12px").style("fill", "#666").text("Modern Era (2014+), Min. 100 stops, excludes stops > 40s");
+
+    // Static X Axis (Based on maximum dataset value to prevent jumpiness)
+    const x = d3.scaleLinear()
+      .domain([0, d3.max(data, d => d.AvgPitStopDuration) * 1.05]) 
+      .range([0, width]);
+      
+    svg.append("g")
+      .attr("transform", `translate(0,${height})`)
+      .call(d3.axisBottom(x));
+      
+    svg.append("text").attr("x", width / 2).attr("y", height + 40).attr("text-anchor", "middle").text("Average Time (Seconds)");
+
+    // Y Axis (Dynamic based on data subset)
+    const y = d3.scaleBand().range([0, height]).padding(0.2);
+    const yAxisGroup = svg.append("g");
+
+    // Pagination State
+    let currentIndex = 0;
+    const itemsPerPage = 10;
+    const prevBtn = document.getElementById(prevBtnId);
+    const nextBtn = document.getElementById(nextBtnId);
+    const pageInfo = document.getElementById(pageInfoId);
+
+    // D3 Update Function
+    function updateChart() {
+        const currentData = data.slice(currentIndex, currentIndex + itemsPerPage);
+
+        // Update Y Scale and Axis
+        y.domain(currentData.map(d => d.ConstructorName));
+        yAxisGroup.transition().duration(500).call(d3.axisLeft(y));
+
+        // Join Bars
+        const bars = svg.selectAll(".bar").data(currentData, d => d.ConstructorName);
+
+        // Enter + Update
+        bars.enter()
+          .append("rect")
+            .attr("class", "bar")
+            .attr("x", 0)
+            .attr("y", d => y(d.ConstructorName))
+            .attr("width", 0) // Start at 0 for transition
+            .attr("height", y.bandwidth())
+            .attr("fill", "teal")
+          .merge(bars)
+          .transition().duration(500)
+            .attr("y", d => y(d.ConstructorName))
+            .attr("width", d => x(d.AvgPitStopDuration))
+            .attr("height", y.bandwidth());
+
+        // Exit
+        bars.exit()
+          .transition().duration(500)
+            .attr("width", 0)
+          .remove();
+
+        // Update Labels inside/near bars
+        const labels = svg.selectAll(".label").data(currentData, d => d.ConstructorName);
+        
+        labels.enter()
+          .append("text")
+            .attr("class", "label")
+            .attr("y", d => y(d.ConstructorName) + y.bandwidth() / 2)
+            .attr("x", 0)
+            .attr("dy", ".35em")
+            .attr("dx", 5)
+            .style("fill", "#333")
+            .style("font-size", "12px")
+          .merge(labels)
+          .transition().duration(500)
+            .attr("y", d => y(d.ConstructorName) + y.bandwidth() / 2)
+            .attr("x", d => x(d.AvgPitStopDuration))
+            .text(d => d.AvgPitStopDuration.toFixed(3) + "s");
+
+        labels.exit().remove();
+
+        // Update Pagination Controls
+        prevBtn.disabled = currentIndex === 0;
+        nextBtn.disabled = currentIndex + itemsPerPage >= data.length;
+        const currentEnd = Math.min(currentIndex + itemsPerPage, data.length);
+        pageInfo.innerText = `Showing ${currentIndex + 1} - ${currentEnd} of ${data.length}`;
+    }
+
+    // Attach Event Listeners
+    prevBtn.addEventListener('click', () => {
+        if (currentIndex > 0) {
+            currentIndex -= itemsPerPage;
+            updateChart();
+        }
+    });
+
+    nextBtn.addEventListener('click', () => {
+        if (currentIndex + itemsPerPage < data.length) {
+            currentIndex += itemsPerPage;
+            updateChart();
+        }
+    });
+
+    // Initial render
+    updateChart();
+}

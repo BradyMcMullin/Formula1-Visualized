@@ -6,20 +6,43 @@
     <title>F1 Analysis - Pit Stops</title>
     
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
 
     <nav>
-        <a href="{{ url_for('home') }}">Home</a> | 
-        <a href="{{ url_for('pit_stops_page') }}">Pit Stops</a>
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('pit_stops_page') }}" class="active">Pit Stops</a>
+        <a href="{{ url_for('drivers_page') }}">Drivers</a>
+        <a href="{{ url_for('circuits_page') }}">Circuits</a>
+        <a href="{{ url_for('seasons_page') }}">Seasons & Constructors</a>
     </nav>
 
     <div class="container">
         <h1>Pit Stop Strategies & Finishing Positions</h1>
         <p>This chart explores the correlation between the number of pit stops a driver takes and their average finishing position (2011-2024, excluding DNFs).</p>
         
+
+
+        <hr>
+
+        <div class="chart-wrapper" style="margin-bottom: 50px;">
+            <div id="pitStopsYearChart"></div>
+        </div>
+
+        <div class="chart-wrapper" style="margin-bottom: 50px;">
+            <div id="avgDurationChart"></div>
+        </div>
+
+        <div class="chart-wrapper" style="margin-bottom: 50px;">
+            <div id="fastestCrewsChart"></div>
+            <div class="pagination-controls" style="text-align: center; margin-top: 15px;">
+                <button id="prevCrewsBtn" style="padding: 5px 15px; cursor: pointer;">&uarr; Previous 10</button>
+                <span id="crewsPageInfo" style="margin: 0 20px; font-weight: bold;"></span>
+                <button id="nextCrewsBtn" style="padding: 5px 15px; cursor: pointer;">&darr; Next 10</button>
+            </div>
+        </div>
+
         <div id="pit-stop-chart"></div>
     </div>
 

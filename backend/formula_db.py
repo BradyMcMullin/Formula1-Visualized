@@ -1,4 +1,3 @@
-
 import sqlite3
 
 def get_db_connection():
@@ -19,7 +18,9 @@ def get_query(query):
 -----------------
 PIT STOP ANALYSIS
 -----------------
+Focuses on the pit_stops table, pit durations, and their effect on the race.
 """
+
 def avg_position_per_pit_stop_count():
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -98,12 +99,11 @@ def fastest_pit_crews_by_constructor():
         JOIN constructors AS c ON r.constructorId = c.constructorId
         JOIN races AS rs ON p.raceId = rs.raceId
         WHERE p.milliseconds IS NOT NULL 
-          AND p.milliseconds < 40000 -- Cap at 40s to exclude penalties, front-wing changes, or red flags
-          AND rs.year >= 2014 -- Focus on the modern Turbo-Hybrid era for relevance
+          AND p.milliseconds < 40000 
+          AND rs.year >= 2014
         GROUP BY c.name
-        HAVING TotalPitStops > 100 -- Ensure a statistically significant sample size
-        ORDER BY AvgPitStopDuration ASC
-        LIMIT 10;
+        HAVING TotalPitStops > 100 
+        ORDER BY AvgPitStopDuration ASC;
     """)
     rows = cursor.fetchall()
     results = [dict(row) for row in rows]
@@ -115,6 +115,7 @@ def fastest_pit_crews_by_constructor():
 ----------------
 CIRCUIT ANALYSIS
 ----------------
+Focuses on the geographic data, circuit history, and circuit-specific metrics.
 """
 
 def total_retirements_by_circuit():
@@ -149,160 +150,22 @@ def number_of_races_by_circuit():
                     ORDER BY total_races DESC;
                    """)
     rows = cursor.fetchall()
-    results = [  dict(row) for row in rows]
+    results = [ dict(row) for row in rows]
     conn.close()
     return results
 
-"""
----------------------------
-DRIVER PERFORMANCE ANALYSIS
----------------------------
-"""
-
-def driver_with_most_wins():
+def countries_by_circuits_hosted():
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
-                   SELECT 
-                        count(*) AS total_wins,
-                        d.forename || ' ' || d.surname AS driver_name
-                   FROM drivers AS d
-                   JOIN results AS r ON d.driverId = r.driverId
-                   WHERE r.positionOrder = 1
-                   GROUP BY d.driverId
-                   ORDER BY total_wins DESC
-                   LIMIT 10;
-                   """
-    )
-    rows = cursor.fetchall()
-    results = [dict(row) for row in rows]
-    conn.close()
-    return results
-
-def driver_win_percentage():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT 
-            d.forename || ' ' || d.surname AS driver_name,
-            COUNT(r.raceId) AS total_races,
-            SUM(CASE WHEN r.positionOrder = 1 THEN 1 ELSE 0 END) AS total_wins,
-            ROUND((CAST(SUM(CASE WHEN r.positionOrder = 1 THEN 1 ELSE 0 END) AS FLOAT) / COUNT(r.raceId)) * 100, 2) AS win_percentage
-        FROM drivers AS d
-        JOIN results AS r ON d.driverId = r.driverId
-        GROUP BY d.driverId, d.forename, d.surname
-        HAVING total_races >= 50 
-        ORDER BY win_percentage DESC
-        LIMIT 10;
-    """)
-    rows = cursor.fetchall()
-    results = [dict(row) for row in rows]
-    conn.close()
-    return results
-
-def best_overtakers():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT 
-            d.forename || ' ' || d.surname AS driver_name,
-            COUNT(r.raceId) AS races_finished,
-            SUM(r.grid - r.positionOrder) AS total_positions_gained,
-            ROUND(AVG(r.grid - r.positionOrder), 2) AS avg_positions_gained_per_race
-        FROM drivers AS d
-        JOIN results AS r ON d.driverId = r.driverId
-        WHERE r.grid > 0 AND r.positionOrder > 0 -- Exclude pitlane starts and DNFs
-        GROUP BY d.driverId, d.forename, d.surname
-        HAVING races_finished >= 50
-        ORDER BY avg_positions_gained_per_race DESC
-        LIMIT 10;
-    """)
-    rows = cursor.fetchall()
-    results = [dict(row) for row in rows]
-    conn.close()
-    return results
-
-def driver_dataset_summary():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT 
-            COUNT(driverId) AS total_drivers,
-            COUNT(DISTINCT nationality) AS total_nationalities
-        FROM drivers;
-    """)
-    row = cursor.fetchone() 
-    result = dict(row) if row else {}
-    conn.close()
-    return result
-
-def drivers_by_nationality():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT 
-            nationality,
-            COUNT(driverId) AS total_drivers
-        FROM drivers
-        GROUP BY nationality
-        ORDER BY total_drivers DESC
-        LIMIT 10;
-    """)
-    rows = cursor.fetchall()
-    results = [dict(row) for row in rows]
-    conn.close()
-    return results
-
-def most_experienced_drivers():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT 
-            d.forename || ' ' || d.surname AS driver_name,
-            COUNT(r.raceId) AS total_races_entered
-        FROM drivers AS d
-        JOIN results AS r ON d.driverId = r.driverId
-        GROUP BY d.driverId, d.forename, d.surname
-        ORDER BY total_races_entered DESC
-        LIMIT 10;
-    """)
-    rows = cursor.fetchall()
-    results = [dict(row) for row in rows]
-    conn.close()
-    return results
-
-def year_with_most_winners():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-            SELECT 
-                ra.year,
-                COUNT(DISTINCT r.driverId) AS unique_winners
-            FROM results r
-            JOIN races ra ON r.raceId = ra.raceId
-            WHERE r.position = 1
-            GROUP BY ra.year
-            ORDER BY unique_winners DESC
-                   """)
-    rows = cursor.fetchall()
-    results = [dict(row) for row in rows]
-    conn.close()
-    return results
-
-def constructor_points_scored_by_country():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-            SELECT 
-                c.country AS host_country,
-                co.nationality AS constructor_nationality,
-                SUM(r.points) AS total_points
-            FROM results r
-            JOIN races ra ON r.raceId = ra.raceId
-            JOIN circuits c ON ra.circuitId = c.circuitId
-            JOIN constructors co ON r.constructorId = co.constructorId
-            GROUP BY c.country, co.nationality
-            ORDER BY total_points DESC
+                    SELECT 
+                        c.country,
+                        COUNT(DISTINCT c.circuitId) AS circuits_hosted
+                    FROM circuits c
+                    JOIN races ra ON c.circuitId = ra.circuitId
+                    GROUP BY c.country
+                    ORDER BY circuits_hosted DESC
+                    LIMIT 100;
                    """)
     rows = cursor.fetchall()
     results = [dict(row) for row in rows]
@@ -333,40 +196,6 @@ def highest_average_finishing_position_by_circuit():
     conn.close()
     return results
 
-def countries_by_circuits_hosted():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-                    SELECT 
-                        c.country,
-                        COUNT(DISTINCT c.circuitId) AS circuits_hosted
-                    FROM circuits c
-                    JOIN races ra ON c.circuitId = ra.circuitId
-                    GROUP BY c.country
-                    ORDER BY circuits_hosted DESC
-                    LIMIT 100;
-                   """)
-    rows = cursor.fetchall()
-    results = [dict(row) for row in rows]
-    conn.close()
-    return results
-
-def drivers_by_career_length():
-    query = """
-            SELECT
-                d.forename || ' ' || d.surname AS driver_name,
-                MIN(ra.year) AS first_year,
-                MAX(ra.year) AS last_year,
-                (MAX(ra.year) - MIN(ra.year)) AS career_length_years,
-                COUNT(r.raceId) AS total_races
-            FROM drivers d
-            JOIN results r ON d.driverId = r.driverId
-            JOIN races ra ON r.raceId = ra.raceId
-            GROUP BY d.driverId
-            ORDER BY career_length_years DESC
-            """
-    return get_query(query)
-
 def competitiveness_over_time():
     query = """
                 WITH decade_circuit AS (
@@ -393,3 +222,199 @@ def competitiveness_over_time():
             ORDER BY circuitId, decade;
             """
     return get_query(query)
+
+def get_circuit_locations():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT 
+            name AS circuit_name,
+            location,
+            country,
+            lat,
+            lng
+        FROM circuits
+        WHERE lat IS NOT NULL AND lng IS NOT NULL;
+    """)
+    rows = cursor.fetchall()
+    results = [dict(row) for row in rows]
+    conn.close()
+    return results
+
+
+"""
+---------------------------
+DRIVER PERFORMANCE ANALYSIS
+---------------------------
+Focuses on individual driver metrics, demographics, and career stats.
+"""
+
+def driver_dataset_summary():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT 
+            COUNT(driverId) AS total_drivers,
+            COUNT(DISTINCT nationality) AS total_nationalities
+        FROM drivers;
+    """)
+    row = cursor.fetchone() 
+    result = dict(row) if row else {}
+    conn.close()
+    return result
+
+def drivers_by_nationality():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT 
+            nationality,
+            COUNT(driverId) AS total_drivers
+        FROM drivers
+        GROUP BY nationality
+        ORDER BY total_drivers DESC;
+    """)
+    rows = cursor.fetchall()
+    results = [dict(row) for row in rows]
+    conn.close()
+    return results
+
+def most_experienced_drivers():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT 
+            d.forename || ' ' || d.surname AS driver_name,
+            COUNT(r.raceId) AS total_races_entered
+        FROM drivers AS d
+        JOIN results AS r ON d.driverId = r.driverId
+        GROUP BY d.driverId, d.forename, d.surname
+        ORDER BY total_races_entered DESC;
+    """)
+    rows = cursor.fetchall()
+    results = [dict(row) for row in rows]
+    conn.close()
+    return results
+
+def drivers_by_career_length():
+    query = """
+            SELECT
+                d.forename || ' ' || d.surname AS driver_name,
+                MIN(ra.year) AS first_year,
+                MAX(ra.year) AS last_year,
+                (MAX(ra.year) - MIN(ra.year)) AS career_length_years,
+                COUNT(r.raceId) AS total_races
+            FROM drivers d
+            JOIN results r ON d.driverId = r.driverId
+            JOIN races ra ON r.raceId = ra.raceId
+            GROUP BY d.driverId
+            ORDER BY career_length_years DESC;
+            """
+    return get_query(query)
+
+def driver_with_most_wins():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+                   SELECT 
+                        count(*) AS total_wins,
+                        d.forename || ' ' || d.surname AS driver_name
+                   FROM drivers AS d
+                   JOIN results AS r ON d.driverId = r.driverId
+                   WHERE r.positionOrder = 1
+                   GROUP BY d.driverId
+                   ORDER BY total_wins DESC;
+                   """
+    )
+    rows = cursor.fetchall()
+    results = [dict(row) for row in rows]
+    conn.close()
+    return results
+
+def driver_win_percentage():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT 
+            d.forename || ' ' || d.surname AS driver_name,
+            COUNT(r.raceId) AS total_races,
+            SUM(CASE WHEN r.positionOrder = 1 THEN 1 ELSE 0 END) AS total_wins,
+            ROUND((CAST(SUM(CASE WHEN r.positionOrder = 1 THEN 1 ELSE 0 END) AS FLOAT) / COUNT(r.raceId)) * 100, 2) AS win_percentage
+        FROM drivers AS d
+        JOIN results AS r ON d.driverId = r.driverId
+        GROUP BY d.driverId, d.forename, d.surname
+        HAVING total_races >= 50 
+        ORDER BY win_percentage DESC;
+    """)
+    rows = cursor.fetchall()
+    results = [dict(row) for row in rows]
+    conn.close()
+    return results
+
+def best_overtakers():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT 
+            d.forename || ' ' || d.surname AS driver_name,
+            COUNT(r.raceId) AS races_finished,
+            SUM(r.grid - r.positionOrder) AS total_positions_gained,
+            ROUND(AVG(r.grid - r.positionOrder), 2) AS avg_positions_gained_per_race
+        FROM drivers AS d
+        JOIN results AS r ON d.driverId = r.driverId
+        WHERE r.grid > 0 AND r.positionOrder > 0 
+        GROUP BY d.driverId, d.forename, d.surname
+        HAVING races_finished >= 50
+        ORDER BY avg_positions_gained_per_race DESC;
+    """)
+    rows = cursor.fetchall()
+    results = [dict(row) for row in rows]
+    conn.close()
+    return results
+
+
+"""
+---------------------------
+SEASON & CONSTRUCTOR ANALYSIS
+---------------------------
+Focuses on overall seasons, team dominance, and general trends.
+"""
+
+def year_with_most_winners():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+            SELECT 
+                ra.year,
+                COUNT(DISTINCT r.driverId) AS unique_winners
+            FROM results r
+            JOIN races ra ON r.raceId = ra.raceId
+            WHERE r.position = 1
+            GROUP BY ra.year
+            ORDER BY unique_winners DESC
+                   """)
+    rows = cursor.fetchall()
+    results = [dict(row) for row in rows]
+    conn.close()
+    return results
+
+def constructor_points_scored_by_country():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+ SELECT 
+                c.country AS host_country,
+                co.name AS constructor_name,
+                SUM(r.points) AS total_points
+            FROM results r
+            JOIN races ra ON r.raceId = ra.raceId
+            JOIN circuits c ON ra.circuitId = c.circuitId
+            JOIN constructors co ON r.constructorId = co.constructorId
+            GROUP BY c.country, co.constructorId, co.name
+            ORDER BY total_points DESC
+            Limit 150;
+                   """)
+    rows = cursor.fetchall()
+    results = [dict(row) for row in rows]
+    conn.close()
+    return results

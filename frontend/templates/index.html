@@ -9,9 +9,12 @@
 </head>
 <body>
 
-    <nav class="main-nav">
-        <a href="{{ url_for('home') }}">Home</a> | 
-        <a href="{{ url_for('pit_stops_page') }}">Pit Stops Analysis</a>
+    <nav>
+        <a href="{{ url_for('home') }}" class="active">Home</a>
+        <a href="{{ url_for('pit_stops_page') }}">Pit Stops</a>
+        <a href="{{ url_for('drivers_page') }}">Drivers</a>
+        <a href="{{ url_for('circuits_page') }}">Circuits</a>
+        <a href="{{ url_for('seasons_page') }}">Seasons & Constructors</a>
     </nav>
 
     <div class="container">
@@ -26,7 +29,19 @@
                 <strong>Pit Stop Strategy:</strong> 
                 <a href="{{ url_for('pit_stops_page') }}">Explore how the number of pit stops correlates with a driver's final finishing position.</a>
             </li>
-            </ul>
+            <li>
+                <strong>Drivers Analytics:</strong> 
+                <a href="{{ url_for('drivers_page') }}">Analyze driver experience, win percentages, nationalities, and overtaking ability.</a>
+            </li>
+            <li>
+                <strong>Circuits Analytics:</strong> 
+                <a href="{{ url_for('circuits_page') }}">Discover the most dangerous tracks, historical host countries, and track-specific specialists.</a>
+            </li>
+            <li>
+                <strong>Seasons & Constructors:</strong> 
+                <a href="{{ url_for('seasons_page') }}">Look into historical dominance by teams and the most unpredictable seasons in F1 history.</a>
+            </li>
+        </ul>
     </div>
 
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
