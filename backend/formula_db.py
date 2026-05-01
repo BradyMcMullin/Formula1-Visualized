@@ -208,7 +208,7 @@ def competitiveness_over_time():
                     ROUND(AVG(r.grid - r.positionOrder), 2) AS avg_positions_gained
                 FROM results r
                 JOIN races ra ON r.raceId = ra.raceId
-                JOIN circuits c ON r.circuitId = c.circuitId
+                JOIN circuits c ON ra.circuitId = c.circuitId
                 WHERE r.grid > 0 AND r.positionOrder > 0
                 GROUP BY ra.circuitId, decade
                 HAVING races_held >= 2
